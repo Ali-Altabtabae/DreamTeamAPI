@@ -1,4 +1,4 @@
-const { Message, User } = require("../db/models");
+const { Message, User, Room } = require("../db/models");
 
 // Fetch Message
 exports.fetchMessage = async (messageId, next) => {
@@ -14,11 +14,17 @@ exports.fetchMessage = async (messageId, next) => {
 exports.messageList = async (req, res, next) => {
   try {
     const messages = await Message.findAll({
-      attributes: { exclude: ["userId", "createdAt", "updatedAt"] },
-      include: {
-        model: User,
-        attributes: { exclude: ["password", "createdAt", "updatedAt"] },
-      },
+      attributes: { exclude: ["userId", "roomId", "createdAt", "updatedAt"] },
+      include: [
+        {
+          model: User,
+          attributes: { exclude: ["password", "createdAt", "updatedAt"] },
+        },
+        {
+          model: Room,
+          attributes: { exclude: ["createdAt", "updatedAt"] },
+        },
+      ],
     });
     res.json(messages);
   } catch (error) {
@@ -28,8 +34,9 @@ exports.messageList = async (req, res, next) => {
 // Create Message
 exports.messageCreate = async (req, res, next) => {
   const { userId } = req.params;
-  console.log("userId is ", userId);
+  const { roomId } = req.params;
   req.body.userId = userId;
+  req.body.roomId = roomId;
   try {
     const newMessage = await Message.create(req.body);
     res.status(201).json(newMessage);
@@ -41,6 +48,7 @@ exports.messageCreate = async (req, res, next) => {
 exports.messageDelete = async (req, res) => {
   const { messageId } = req.params;
   try {
+    console.log("This is req.user.id: ",req.user.id)
     const foundMessage = await Message.findByPk(messageId);
     if (foundMessage) {
       await foundMessage.destroy();

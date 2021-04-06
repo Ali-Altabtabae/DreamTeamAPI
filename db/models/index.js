@@ -69,4 +69,17 @@ db.Message.belongsTo(db.User, {
    foreignKey: "userId",
 });
 
+// Room to Message (One To Many)
+
+db.Room.hasMany(db.Message, {
+  foreignKey: {
+    name: "roomId",
+    allowNull: false
+  }
+});
+
+db.Message.belongsTo(db.Room, {
+   foreignKey: "roomId",
+});
+
 module.exports = db;

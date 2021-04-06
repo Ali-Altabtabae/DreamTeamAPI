@@ -13,7 +13,11 @@ router.get("/rooms", roomList);
 // Create Room
 router.post("/users/rooms/:userId", roomCreate);
 // Delete Room
-router.delete("/:userId/:roomId", roomDelete);
+router.delete(
+  "/:userId/:roomId",
+  //passport.authenticate("jwt", { session: false }),
+  roomDelete
+);
 // Update Room
 router.put("/rooms/:roomId", roomUpdate);
 

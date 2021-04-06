@@ -11,9 +11,9 @@ const passport = require("passport");
 // Get Messages
 router.get("/messages", messageList);
 // Create Message
-router.post("/users/messages/:userId", messageCreate);
+router.post("/users/messages/:userId/:roomId", messageCreate);
 // Delete Message
-router.delete("/:userId/:messageId", messageDelete);
+router.delete("rooms/:userId/:messageId", messageDelete);
 // Update Message
 router.put("/messages/:messageId", messageUpdate);
 

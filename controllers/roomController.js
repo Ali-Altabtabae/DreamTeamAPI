@@ -1,4 +1,4 @@
-const { Room, User } = require("../db/models");
+const { Room, User, Message } = require("../db/models");
 
 // Fetch Room
 exports.fetchRoom = async (roomId, next) => {
@@ -15,10 +15,16 @@ exports.roomList = async (req, res, next) => {
   try {
     const rooms = await Room.findAll({
       attributes: { exclude: ["userId", "createdAt", "updatedAt"] },
-      include: {
-        model: User,
-        attributes: { exclude: ["password", "createdAt", "updatedAt"] },
-      },
+      include: [
+        {
+          model: User,
+          attributes: { exclude: ["password", "createdAt", "updatedAt"] },
+        },
+        {
+          model: Message,
+          attributes: { exclude: ["createdAt", "updatedAt"] },
+        },
+      ],
     });
     res.json(rooms);
   } catch (error) {
@@ -40,11 +46,17 @@ exports.roomCreate = async (req, res, next) => {
 // Delete Room
 exports.roomDelete = async (req, res) => {
   const { roomId } = req.params;
+  const { userId } = req.params
   try {
     const foundRoom = await Room.findByPk(roomId);
     if (foundRoom) {
-      await foundRoom.destroy();
-      res.status(204).end();
+      const getAdminId = foundRoom.userId;
+      if (getAdminId === +userId) {
+        await foundRoom.destroy();
+        res.status(204).end();
+      } else {
+        res.status(404).json({ message: "You are not the Admin" });
+      }
     } else {
       res.status(404).json({ message: "Room not found" });
     }
