@@ -9,16 +9,24 @@ const {
 const passport = require("passport");
 
 // Get Rooms
-router.get("/rooms", roomList);
+router.get("/", roomList);
 // Create Room
-router.post("/users/rooms/:userId", roomCreate);
+router.post(
+  "/createRoom",
+  passport.authenticate("jwt", { session: false }),
+  roomCreate
+);
 // Delete Room
 router.delete(
-  "/:userId/:roomId",
-  //passport.authenticate("jwt", { session: false }),
+  "/:roomId/roomDelete",
+  passport.authenticate("jwt", { session: false }),
   roomDelete
 );
 // Update Room
-router.put("/rooms/:roomId", roomUpdate);
+router.put(
+  "/:roomId/updateRoom",
+  passport.authenticate("jwt", { session: false }),
+  roomUpdate
+);
 
 module.exports = router;

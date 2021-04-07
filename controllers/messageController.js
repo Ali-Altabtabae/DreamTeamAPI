@@ -1,15 +1,5 @@
 const { Message, User, Room } = require("../db/models");
 
-// Fetch Message
-exports.fetchMessage = async (messageId, next) => {
-  try {
-    const message = await Message.findByPk(messageId);
-    return message;
-  } catch (error) {
-    next(error);
-  }
-};
-
 // List Messages
 exports.messageList = async (req, res, next) => {
   try {
@@ -33,10 +23,9 @@ exports.messageList = async (req, res, next) => {
 };
 // Create Message
 exports.messageCreate = async (req, res, next) => {
-  const { userId } = req.params;
   const { roomId } = req.params;
-  req.body.userId = userId;
   req.body.roomId = roomId;
+  req.body.userId = req.user.id;
   try {
     const newMessage = await Message.create(req.body);
     res.status(201).json(newMessage);
@@ -47,12 +36,19 @@ exports.messageCreate = async (req, res, next) => {
 // Delete Room
 exports.messageDelete = async (req, res) => {
   const { messageId } = req.params;
+  const { roomId } = req.params;
+  req.body.messageId = messageId;
+  req.body.roomId = roomId;
+
+  req.body.userId = req.user.id;
+
   try {
-    console.log("This is req.user.id: ",req.user.id)
     const foundMessage = await Message.findByPk(messageId);
-    if (foundMessage) {
+    if (foundMessage && req.user.id === foundMessage.userId) {
       await foundMessage.destroy();
       res.status(204).end();
+    } else if (foundMessage) {
+      res.status(404).json({ message: "Cannot delete this message" });
     } else {
       res.status(404).json({ message: "Message not found" });
     }
@@ -63,16 +59,22 @@ exports.messageDelete = async (req, res) => {
 // Update Room
 exports.messageUpdate = async (req, res, next) => {
   const { messageId } = req.params;
-  const foundMessage = await this.fetchMessage(messageId, next);
-  if (foundMessage) {
-    await foundMessage.update(req.body);
-    res.status(204).end();
-  } else {
-    res.status(404).json({ message: "Message not found" });
-  }
+  const { roomId } = req.params;
+  req.body.messageId = messageId;
+  req.body.roomId = roomId;
+
+  req.body.userId = req.user.id;
+
   try {
-    const newMessage = await Message.create(req.body);
-    res.status(201).json(newMessage);
+    const foundMessage = await Message.findByPk(messageId);
+    if (foundMessage && req.user.id === foundMessage.userId) {
+      await foundMessage.update(req.body);
+      res.status(204).end();
+    } else if (foundMessage) {
+      res.status(404).json({ message: "Cannot update this message" });
+    } else {
+      res.status(404).json({ message: "Message not found" });
+    }
   } catch (err) {
     next(error);
   }

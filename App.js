@@ -22,13 +22,15 @@ app.use(passport.initialize());
 passport.use(localStrategy);
 passport.use(jwtStrategy);
 
-// Routes
+// Importing Routes
 const userRoute = require("./routes/userRoute");
-app.use(userRoute);
 const roomRoute = require("./routes/roomRoute");
-app.use(roomRoute);
 const messageRoute = require("./routes/messageRoute");
-app.use(messageRoute);
+
+// Routes
+app.use(userRoute);
+app.use("/rooms", roomRoute);
+app.use("/rooms", messageRoute);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -37,10 +39,12 @@ app.use((err, req, res, next) => {
     message: err.message || "Internal Server Error",
   });
 });
+
 // Paths Handling Middleware
 app.use((req, res, next) => {
   res.status(404).json({ message: "Path not found" });
 });
+
 // Run the API
 const run = async () => {
   try {

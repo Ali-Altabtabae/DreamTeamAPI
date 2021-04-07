@@ -33,9 +33,9 @@ exports.roomList = async (req, res, next) => {
 };
 // Create Room
 exports.roomCreate = async (req, res, next) => {
-  const { userId } = req.params;
-  console.log("userId is ", userId);
-  req.body.userId = userId;
+  const { roomId } = req.params;
+  req.body.roomId = roomId;
+  req.body.userId = req.user.id;
   try {
     const newRoom = await Room.create(req.body);
     res.status(201).json(newRoom);
@@ -46,17 +46,17 @@ exports.roomCreate = async (req, res, next) => {
 // Delete Room
 exports.roomDelete = async (req, res) => {
   const { roomId } = req.params;
-  const { userId } = req.params
+  req.body.roomId = roomId;
+
+  req.body.userId = req.user.id;
+
   try {
     const foundRoom = await Room.findByPk(roomId);
-    if (foundRoom) {
-      const getAdminId = foundRoom.userId;
-      if (getAdminId === +userId) {
-        await foundRoom.destroy();
-        res.status(204).end();
-      } else {
-        res.status(404).json({ message: "You are not the Admin" });
-      }
+    if (foundRoom && req.user.id === foundRoom.userId) {
+      await foundRoom.destroy();
+      res.status(204).end();
+    } else if (foundRoom) {
+      res.status(404).json({ message: "Cannot delete this room" });
     } else {
       res.status(404).json({ message: "Room not found" });
     }
@@ -67,16 +67,20 @@ exports.roomDelete = async (req, res) => {
 // Update Room
 exports.roomUpdate = async (req, res, next) => {
   const { roomId } = req.params;
-  const foundRoom = await this.fetchRoom(roomId, next);
-  if (foundRoom) {
-    await foundRoom.update(req.body);
-    res.status(204).end();
-  } else {
-    res.status(404).json({ message: "Room not found" });
-  }
+  req.body.roomId = roomId;
+
+  req.body.userId = req.user.id;
+  
   try {
-    const newRoom = await Room.create(req.body);
-    res.status(201).json(newRoom);
+    const foundRoom = await Room.findByPk(roomId);
+    if (foundRoom && req.user.id === foundRoom.userId) {
+      await foundRoom.update(req.body);
+      res.status(204).end();
+    } else if (foundRoom) {
+      res.status(404).json({ message: "Cannot update this room" });
+    } else {
+      res.status(404).json({ message: "Room not found" });
+    }
   } catch (err) {
     next(error);
   }
