@@ -67,8 +67,8 @@ exports.roomDelete = async (req, res) => {
 // Update Room
 exports.roomUpdate = async (req, res, next) => {
   const { roomId } = req.params;
+  
   req.body.roomId = roomId;
-
   req.body.userId = req.user.id;
   
   try {
